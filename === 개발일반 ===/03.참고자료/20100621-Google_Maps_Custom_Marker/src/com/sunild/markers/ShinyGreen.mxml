@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:degrafa="http://www.degrafa.com/2007"
+	creationComplete="init()">
+	
+	<mx:Script>
+		<![CDATA[
+			
+			private function init():void
+			{
+				addEventListener(MouseEvent.ROLL_OVER,handleMouseEvent,false,0,true);
+				addEventListener(MouseEvent.ROLL_OUT,handleMouseEvent,false,0,true);
+			}
+			
+			private function handleMouseEvent(event:Event):void
+			{
+				switch (event.type)
+				{
+					case MouseEvent.ROLL_OVER:
+						currentState = "rollOver";
+						break;
+					case MouseEvent.ROLL_OUT:
+						currentState = "";
+						break;
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<degrafa:Surface>
+	
+		<degrafa:GeometryGroup>
+		<degrafa:Circle id="bigCircle"
+			centerX="0" centerY="0" radius="8" >
+			<degrafa:fill>
+				<degrafa:LinearGradientFill angle="45">
+					<degrafa:GradientStop color="#222222"/>
+					<degrafa:GradientStop color="#666666"/>
+					<degrafa:GradientStop color="#222222"/>
+				</degrafa:LinearGradientFill>
+			</degrafa:fill>
+			<degrafa:stroke>
+				<degrafa:SolidStroke color="#000000"/>
+			</degrafa:stroke>
+		</degrafa:Circle>
+		</degrafa:GeometryGroup>
+		
+		<degrafa:GeometryGroup id="smallGroup">
+		<degrafa:Circle id="smallCircle"
+			centerX="0" centerY="0" radius="6" >
+			<degrafa:fill>
+				<degrafa:LinearGradientFill angle="45">
+					<degrafa:GradientStop color="#2db300"/>
+					<degrafa:GradientStop color="#005401"/>
+				</degrafa:LinearGradientFill>
+			</degrafa:fill>
+		</degrafa:Circle>
+		</degrafa:GeometryGroup>
+	</degrafa:Surface>
+	
+	<mx:states>
+		<mx:State name="rollOver">
+			<mx:SetProperty target="{this}"
+				name="filters"
+				value="{[ new GlowFilter(0x2db300,.5,14,14,7,3)]}"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition fromState="" toState="rollOver">
+			<mx:Parallel>
+				<mx:AnimateProperty target="{smallCircle}"
+					property="radius"
+					fromValue="6" toValue="8"
+					duration="250"/>
+				<mx:AnimateProperty  target="{bigCircle}"
+					property="radius"
+					fromValue="8" toValue="10"
+					duration="250"/>
+				<mx:Fade target="{smallGroup}"
+					alphaFrom="1" alphaTo="0"
+					duration="500"/>
+			</mx:Parallel>
+		</mx:Transition>
+		
+		<mx:Transition fromState="rollOver" toState="*">
+			<mx:Parallel>
+				<mx:AnimateProperty target="{smallCircle}"
+					property="radius"
+					fromValue="8" toValue="6"
+					duration="250"/>
+				<mx:AnimateProperty target="{bigCircle}"
+					property="radius"
+					fromValue="10" toValue="8"
+					duration="250"/>
+				<mx:Fade target="{smallGroup}"
+					alphaFrom="0" alphaTo="1"
+					duration="250"/>
+			</mx:Parallel>
+
+		</mx:Transition>
+	</mx:transitions>
+</mx:Canvas>

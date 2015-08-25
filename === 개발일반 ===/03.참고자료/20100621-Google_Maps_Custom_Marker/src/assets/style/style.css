@@ -1,0 +1,63 @@
+/* CSS file */
+
+/*------------------------------------------------------------------------------ Fonts */
+
+@font-face
+{
+	src: 					url('../fonts/Myriad.swf');
+	fontFamily: 			'Myriad Pro';
+	fontWeight:				Regular;
+}
+
+@font-face
+{
+	src: 					url('../fonts/Myriad.swf');
+	fontFamily: 			'Myriad Pro Semibold';
+	fontWeight:				Semibold;
+}
+
+/*------------------------------------------------------------------------------ Global */
+
+global
+{
+	font-family:			'Myriad Pro';
+	color:					#CCCCCC;	
+}
+
+/*------------------------------------------------------------------------------ Text */
+
+.title
+{
+	font-size:				24;
+	text-align:				right;	
+}
+
+/*------------------------------------------------------------------------------ Application */
+
+Application
+{
+	background-color:			"#222222";
+    background-image:			GRID, LOGO;
+    background-repeat:			repeat-x, no-repeat;
+    background-position:		"top left", "10px 10px";
+    borderSkin:					ClassReference("com.degrafa.skins.CSSSkin");
+    asset-class:				ClassReference("assets.EmbeddedAssets");	
+}
+
+/*------------------------------------------------------------------------------ Button */
+
+Button
+{
+	fill-colors:				#222222,#222222;
+	border-color:				#666666;
+	color:						#CCCCCC;
+	corner-radius:				0;
+	text-roll-over-color:		#FFFFFF;
+	highlight-alphas:			0,0;
+	border-alpha:				1;	
+}
+
+ComboBox
+{
+	alternating-item-colors: #666666,#666666;
+}

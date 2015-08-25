@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:UIComponent xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:degrafa="http://www.degrafa.com/2007"
+	creationComplete="init()">
+	
+	<mx:Script>
+		<![CDATA[
+						
+			[Bindable]
+			private var _smallBoxSize:int = 6;
+			
+			public function get smallBoxSize():int
+			{
+				return _smallBoxSize;
+			}
+			
+			public function set smallBoxSize(i:int):void
+			{
+				_smallBoxSize = i;
+			}
+			
+			private function init():void
+			{
+				addEventListener(MouseEvent.ROLL_OVER,handleMouseEvent,false,0,true);
+				addEventListener(MouseEvent.ROLL_OUT,handleMouseEvent,false,0,true);
+			}
+			
+			private function handleMouseEvent(event:Event):void
+			{
+				switch (event.type)
+				{
+					case MouseEvent.ROLL_OVER:
+						currentState = "rollOver";
+						break;
+					default:
+						currentState = "";
+						break;
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<degrafa:GeometryComposition id="comp" graphicsTarget="{[this]}">
+		<degrafa:RoundedRectangle id="rect"
+			width="18" height="18"
+			x="-9" y="-9"
+			cornerRadius="3">
+			<degrafa:fill>
+				<degrafa:SolidFill color="#AB0000" alpha=".8" />
+			</degrafa:fill>
+		</degrafa:RoundedRectangle>
+		
+		<degrafa:RegularRectangle id="smallRect"
+			width="{_smallBoxSize}" height="{_smallBoxSize}"
+			x="{- _smallBoxSize/2}" y="{- _smallBoxSize/2}">
+			<degrafa:fill>
+				<degrafa:SolidFill color="#90a868" />
+			</degrafa:fill>
+		</degrafa:RegularRectangle>
+	</degrafa:GeometryComposition>
+	
+	<mx:states>		
+		<mx:State name="rollOver">
+			<mx:SetProperty name="filters" value="{[new GlowFilter(0xAB0000,.6,14,14,4)]}"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition fromState="" toState="rollOver">
+			<mx:AnimateProperty target="{this}"
+				property="smallBoxSize"
+				fromValue="6" toValue="10"
+				duration="250"/>
+		</mx:Transition>
+		
+		<mx:Transition fromState="rollOver" toState="">
+			<mx:AnimateProperty target="{this}"
+				property="smallBoxSize"
+				fromValue="10" toValue="6"
+				duration="250"/>
+		</mx:Transition>
+	</mx:transitions>
+	
+	
+</mx:UIComponent>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="240" height="190" backgroundAlpha="0.0">
+<mx:Script>
+    <![CDATA[
+        import mx.collections.ArrayCollection;
+        
+        [Bindable]
+        private var acNews:ArrayCollection = new ArrayCollection();
+        
+        [Bindable]
+        private var address:String = new String;
+    
+        private function newsClick():void{
+              var url:URLRequest = new URLRequest(acNews[nNewsList.selectedIndex].link);
+              navigateToURL(url);
+          }
+          
+          public function setDP(data:Array):void{
+              acNews.source = data;
+          }
+
+          
+          public function setAddress(data:String):void{
+              address = data;
+          }
+    ]]>
+</mx:Script>
+    <mx:TextArea y="5" width="220" text="{address}" height="38" backgroundAlpha="0.0" color="#FFFFFF" id="txtAddress" fontSize="12" borderStyle="none" left="5"/>
+    <mx:List id="nNewsList" bottom="5" horizontalCenter="0" dataProvider="{acNews}" itemClick="newsClick()" labelField="title" fontSize="12" height="144" width="230" horizontalScrollPolicy="on" color="#FFFFFF" backgroundColor="#444444" borderStyle="solid" borderColor="#AAAAAA"/>
+</mx:Canvas>

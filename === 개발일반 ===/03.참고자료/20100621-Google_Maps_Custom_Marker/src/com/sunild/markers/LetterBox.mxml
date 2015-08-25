@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:UIComponent xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:degrafa="http://www.degrafa.com/2007"
+	mouseOver="currentState='mouseOver';"
+	mouseOut="currentState='';">
+	
+	<mx:Script>
+		<![CDATA[
+			
+			// just a one character string
+			[Bindable]
+			public var character:String = "A";
+			
+			
+		]]>
+	</mx:Script>
+	
+	<degrafa:GeometryComposition id="comp" graphicsTarget="{[this]}">
+		
+		<degrafa:fills>
+			<degrafa:LinearGradientFill id="blueGradFill" angle="90" >
+				<degrafa:GradientStop color="#0D3893"/>
+				<degrafa:GradientStop color="#080808"/>
+			</degrafa:LinearGradientFill>
+			
+		</degrafa:fills>
+		
+
+		
+		
+		<degrafa:RegularRectangle id="rectA"
+			width="20" height="20"
+			x="-10" y="-10"
+			fill="{blueGradFill}"
+			/>
+			
+		<degrafa:RasterText id="text"
+			text="{character}"
+			fontSize="14"
+			fontWeight="bold"
+			textColor="#FFFFFF"
+			width="20" height="20"
+			x="-7" y="-7" />
+					
+		
+	</degrafa:GeometryComposition>
+	
+	<mx:states>
+		<mx:State name="mouseOver">
+			<mx:SetProperty target="{this}"
+				name="filters"
+				value="{[new GlowFilter(0x0d3893,.55,12,12,5)]}"/>
+				
+			<mx:AddChild>
+				<degrafa:Surface>
+					<degrafa:GeometryGroup>
+						<degrafa:RegularRectangle id="bigBox"
+							width="100" height="45"
+							x="-50" y="-65">
+							<degrafa:fill>
+								<degrafa:LinearGradientFill angle="270">
+									<degrafa:GradientStop color="#EEEEEE"/>
+									<degrafa:GradientStop color="#333333"/>
+								</degrafa:LinearGradientFill>
+							</degrafa:fill>
+						</degrafa:RegularRectangle>
+					</degrafa:GeometryGroup>
+				</degrafa:Surface>
+
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	
+
+</mx:UIComponent>

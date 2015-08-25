@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns="http://www.degrafa.com/2008"
+	xmlns:maps="com.google.maps.*"
+	layout="absolute"
+	backgroundGradientColors="[#333333,#666666]"
+	defaultButton="{lookupBN}" viewSourceURL="srcview/index.html">
+	
+	<mx:Style source="assets/style/style.css"/>
+	
+	<mx:Script>
+		<![CDATA[
+		
+			import com.google.maps.LatLngBounds;
+			import com.google.maps.controls.ZoomControl;
+			import com.google.maps.controls.PositionControl;
+			import com.google.maps.MapType;
+			import com.google.maps.LatLng;
+			import com.google.maps.controls.MapTypeControl;
+			import com.google.maps.services.GeocodingEvent;
+			import com.google.maps.services.ClientGeocoder;
+			import com.sunild.markers.DMarker;
+			import com.sunild.markers.LetterBox;
+			import com.sunild.markers.MovingTarget;
+			import com.sunild.markers.MoxyBoxy;
+			import com.sunild.markers.ShinyGreen;
+			import com.sunild.markers.SpinnyLines;
+			import com.sunild.markers.Target;
+			
+			import mx.core.UIComponent;
+			
+			private var _markers:Array = [];
+			
+			[Bindable]
+			private var _markerTypes:Array = [
+				{ label: "Spinny Lines", value:"spinnyLines"},
+				{ label: "Shiny Green", value: "shinyGreen"},
+				{ label: "Moving Target", value: "movingTarget"},
+				{ label: "Target", value: "target"},
+				{ label: "Moxy Boxy", value: "moxyBoxy"},
+				{ label: "Letter Box", value: "letterBox"} ];
+			
+			private function handleMapReady():void
+			{
+				addressTI.setFocus();
+				map.setCenter(new LatLng(37.76193719348715, -122.4501589625),13,MapType.NORMAL_MAP_TYPE);
+				map.addControl(new PositionControl);
+				map.addControl(new ZoomControl);
+				map.addControl(new MapTypeControl);		
+				addMarkers();
+			}
+						
+			private function addMarkers():void
+			{
+				var mapBounds:LatLngBounds = map.getLatLngBounds();
+				var sw:LatLng = mapBounds.getSouthWest();
+				var ne:LatLng = mapBounds.getNorthEast();
+				var latLen:Number = ne.lat() - sw.lat();
+				var lonLen:Number = ne.lng() - sw.lng();
+				
+				for (var i:int = 0; i < 50; i++)
+				{
+					var tmp:LatLng =
+						new LatLng(sw.lat() + latLen*Math.random(),
+							sw.lng() + lonLen*Math.random() );
+					
+					var graphic:UIComponent = getMarkerGraphic();
+					
+					var marker:DMarker = new DMarker(tmp,graphic);
+					map.addOverlay(marker);
+					_markers.push(marker);
+				}
+			}
+			
+			private function getMarkerGraphic():UIComponent
+			{
+				var graphic:UIComponent;
+				
+				switch (markerTypeCB.selectedItem.value)
+				{
+					case "spinnyLines":
+						graphic = new SpinnyLines();
+						break;
+					case "letterBox":
+						graphic = new LetterBox();
+						break;
+					case "moxyBoxy":
+						graphic = new MoxyBoxy();
+						break;
+					case "shinyGreen":
+						graphic = new ShinyGreen();
+						break;
+					case "target":
+						graphic = new Target();
+						break;
+					case "movingTarget":
+						graphic = new MovingTarget();
+						break;
+				}
+				return graphic;
+			}
+			
+			private function removeMarkers():void
+			{
+				for each (var d:DMarker in _markers)
+				{
+					map.removeOverlay(d);
+				}
+				_markers = [];
+			}
+			
+			private function lookupAddress():void
+			{
+				removeMarkers();
+				
+				if (addressTI.text)
+				{
+					var g:ClientGeocoder = new ClientGeocoder();
+					g.addEventListener(GeocodingEvent.GEOCODING_SUCCESS,
+						function(event:GeocodingEvent):void {
+							var placemarks:Array = event.response.placemarks;
+							if (placemarks.length >0)
+							{
+								map.setCenter(placemarks[0].point);
+								var graphic:UIComponent = getMarkerGraphic();
+								var d:DMarker = new DMarker(placemarks[0].point,graphic);
+								map.addOverlay(d);
+								_markers.push(d);
+								
+							}
+						},false,0,true);
+					
+					g.geocode(addressTI.text);
+				}
+			}
+			
+			
+		]]>
+	</mx:Script>
+	
+	<mx:Label text="Degrafa with Google Maps" top="30" right="30" styleName="title"/>
+	
+	<maps:Map id="map"
+		key="ABQIAAAAz6uBpjJEFtkV6sjMT9F0RRRJb9kvB4l8Ku26oIicI5Yo0uS6ohSuw3PuT0J1a71i-N9O5rXbpQOfLA"
+		top="200" bottom="30" left="250" right="30"
+		mapevent_mapready="handleMapReady();" />
+		
+	<mx:VBox  height="100%" top="200" left="30">
+		<mx:Form>
+			<mx:FormItem label="Marker Types" direction="vertical">
+				<mx:ComboBox id="markerTypeCB"
+					dataProvider="{_markerTypes}"
+					rowCount="{_markerTypes.length}" />
+			</mx:FormItem>
+
+			<mx:FormItem direction="vertical">
+				<mx:Button label="Add Markers" click="addMarkers()"/>
+			</mx:FormItem>
+			<mx:FormItem direction="vertical">
+				<mx:Button label="Remove Markers" click="removeMarkers()"/>
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:Form>
+			<mx:FormHeading label="Address Lookup"/>
+			<mx:FormItem>
+				<mx:TextInput id="addressTI" color="#000000"/>
+			</mx:FormItem>
+			<mx:FormItem>
+				<mx:Button id="lookupBN" label="Lookup" click="lookupAddress()"/>
+			</mx:FormItem>
+		</mx:Form>
+	</mx:VBox>
+	
+</mx:Application>

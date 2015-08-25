@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:maps="com.google.maps.*" width="640" height="480" xmlns:lhd="com.lhd.*" viewSourceURL="srcview/index.html">
+
+
+
+<mx:XML id="mOpt" xmlns="">
+    <ROOT>
+        <MAPTYPE>지도</MAPTYPE>
+        <MAPTYPE>위성</MAPTYPE>
+        <MAPTYPE>중첩</MAPTYPE>
+        <MAPTYPE>지형</MAPTYPE>
+        <VIEWTYPE>2D</VIEWTYPE>
+        <VIEWTYPE>Orthogonal</VIEWTYPE>
+        <VIEWTYPE>Perspective</VIEWTYPE>
+    </ROOT>
+</mx:XML>
+
+<mx:Script>
+    <![CDATA[
+        
+        import com.lhd.events.NaverEvent;
+        import com.lhd.Naver;
+        
+        import mx.controls.Alert;
+        
+        import com.google.maps.Map3D;
+        import com.google.maps.MapOptions;
+        import com.google.maps.View;
+        import com.google.maps.MapType;
+        import com.google.maps.geom.Attitude;
+        import com.google.maps.controls.NavigationControl;
+        
+        import com.google.maps.MapEvent;
+        import com.google.maps.MapZoomEvent;
+        import com.google.maps.MapMouseEvent;
+        import com.google.maps.MapAttitudeEvent;
+        import com.google.maps.services.GeocodingEvent;
+        
+        import com.google.maps.LatLng;
+        
+        import com.google.maps.InfoWindowOptions;
+        import com.google.maps.services.Placemark;
+        import com.google.maps.services.ClientGeocoder;
+        
+        import com.google.maps.styles.StrokeStyle;
+        import com.google.maps.styles.FillStyle;
+        
+        import com.google.maps.overlays.*;
+        
+        private const DEFAULT_ATTITUDE:Attitude = new Attitude(0,20,0);
+        
+        private var customInfo:CustomInfo = new CustomInfo();
+        
+        private var fStyle:FillStyle = new FillStyle({color: 0x222222, alpha:0.7});
+        private var sStyle:StrokeStyle = new StrokeStyle({color: 0x000000, alpha:1.0, thickness:2});
+        
+        private var naver:Naver = new Naver("abd581e1c1d4873fd5f6741169218914");
+        
+        private var currentZoom:Number = new Number;
+        private var currentAttitude:Attitude = new Attitude(0,20,0);
+        
+        private var mMarkOpt:MarkerOptions = new MarkerOptions({fillStyle:fStyle, strokeStyle:sStyle, radius: 6, hasShadow: true});
+        private var optIW:InfoWindowOptions = new InfoWindowOptions();
+
+        private function pre_Map(e:MapEvent):void{
+              var myMapOpt:MapOptions = new MapOptions;
+              myMapOpt.zoom = 12;
+              myMapOpt.center = new LatLng(37.566535,126.9779692);
+              myMapOpt.mapType = MapType.PHYSICAL_MAP_TYPE;
+              myMapOpt.viewMode = View.VIEWMODE_ORTHOGONAL;
+              myMapOpt.attitude = this.DEFAULT_ATTITUDE;
+              map.setInitOptions(myMapOpt);
+          }
+          
+        private function onMapReady(e:MapEvent):void {
+             var naviCtrl:NavigationControl = new NavigationControl;
+             map.addControl(naviCtrl);
+             
+             map.addEventListener(MapMouseEvent.DOUBLE_CLICK,setDefaultAtt);
+             map.addEventListener(MapAttitudeEvent.ATTITUDE_CHANGE_STEP, setAttitude);
+             map.addEventListener(MapZoomEvent.ZOOM_CHANGED, setCurrentZoom);
+             map.addEventListener(MapMouseEvent.MOUSE_MOVE, currentLatLng);
+             map.addEventListener(MapMouseEvent.CLICK, clickMap);
+             
+             
+             currentAttitude = map.getAttitude();
+             currentZoom = map.getZoom();
+             
+             naver.striptag = true;
+          }
+          
+          private function setDefaultAtt(e:MapMouseEvent):void{
+              if(e.altKey || e.ctrlKey || e.shiftKey){
+                  map.setAttitude(this.DEFAULT_ATTITUDE);
+                  currentAttitude = this.DEFAULT_ATTITUDE;
+              }
+          }
+          
+          private function setAttitude(e:MapAttitudeEvent):void{
+              currentAttitude = e.attitude;
+          }
+          
+          private function setCurrentZoom(e:MapZoomEvent):void{
+              currentZoom = map.getZoom();
+          }
+          
+          
+          
+          private function currentLatLng(e:MapMouseEvent):void{
+              txtLat.text = String(e.latLng.lat()).substr(0,8);
+              txtLng.text = String(e.latLng.lng()).substr(0,8);
+          }
+          
+          private function searchAdrs():void{
+              geoCode(tiAddress.text);
+          }
+          
+          private function clickMap(e:MapMouseEvent):void{
+              if((!e.altKey)&&(!e.ctrlKey)&&(!e.shiftKey)){
+                geoCode(e.latLng);
+              }
+          }
+          
+          private function geoCode(o:Object):void{
+              var gCode:ClientGeocoder = new ClientGeocoder();
+              gCode.addEventListener(GeocodingEvent.GEOCODING_SUCCESS, gCodeSuccess);
+             gCode.addEventListener(GeocodingEvent.GEOCODING_FAILURE, gCodeFailed);
+             
+             if(o is LatLng){gCode.reverseGeocode(o as LatLng);}
+             else if(o is String){gCode.geocode(o as String);}
+          }
+          
+          private function gCodeFailed(e:GeocodingEvent):void{
+              e.target.removeEventListener(GeocodingEvent.GEOCODING_SUCCESS, gCodeSuccess);
+             e.target.removeEventListener(GeocodingEvent.GEOCODING_FAILURE, gCodeFailed);
+             
+              Alert.show("GeoCoding Failed");
+          }
+          
+          private function gCodeSuccess(e:GeocodingEvent):void{
+              e.target.removeEventListener(GeocodingEvent.GEOCODING_SUCCESS, gCodeSuccess);
+             e.target.removeEventListener(GeocodingEvent.GEOCODING_FAILURE, gCodeFailed);
+             
+              var pMarks:Array = e.response.placemarks;
+              var marker:Marker = new Marker(pMarks[0].point,mMarkOpt);
+              showInfo(pMarks, marker);
+              map.addOverlay(marker);
+              fly(pMarks[0].point, pMarks[0].Point.coordinates[1], pMarks[0].Point.coordinates[0]);
+              
+              marker.addEventListener(MapMouseEvent.ROLL_OVER, openInfo);
+              marker.addEventListener(MapMouseEvent.CLICK, clrAll);
+              map.addEventListener(MapMouseEvent.DRAG_START, delIW);
+              map.addEventListener(MapEvent.FLY_TO_DONE, endFly);
+              
+              function openInfo(e:MapMouseEvent):void{
+                  showInfo(pMarks, marker);
+              }
+              
+              function delIW(e:MapMouseEvent):void{
+                  marker.closeInfoWindow();
+              }
+              
+              function endFly(e:MapEvent):void{
+                  showInfo(pMarks, marker);
+                  map.savePosition();
+              }
+              
+              function clrAll(e:MapMouseEvent):void{
+                  e.target.closeInfoWindow();
+                  marker.removeEventListener(MapMouseEvent.ROLL_OVER, showInfo);
+                  marker.removeEventListener(MapMouseEvent.CLICK, clrAll);
+                  map.removeEventListener(MapMouseEvent.DRAG_START, delIW);
+                  map.removeEventListener(MapEvent.FLY_TO_DONE, endFly);
+                  map.removeOverlay(marker);
+              }
+          }
+          
+          private function fly(point:LatLng, lat:Number, lng:Number):void{
+              if(point){
+                  map.flyTo(point, currentZoom, currentAttitude, 2);
+              }
+              else if((lat&&lng)){
+                  var loc:LatLng = new LatLng(lat,lng);
+                  map.flyTo(loc, currentZoom, currentAttitude, 2);
+              }
+              else{Alert.show("위도와 경도 자료가 없습니다.");}
+          }
+          
+          private function showInfo(pMarks:Array, mark:Marker):void{
+              if(pMarks[0].addressDetails.Country){
+                  if((pMarks[0].addressDetails.Country.CountryNameCode == "KR")&&(pMarks.length >= 6)){
+                  nNewsLoader(pMarks[5].address);
+                  }
+                  else{
+                  nNewsLoader(pMarks[pMarks.length-1].address);
+                  }
+              }
+              else{
+                  nNewsLoader(pMarks[pMarks.length-1].address);
+              }
+              mark.openInfoWindow(getOptIW(pMarks[0].address));
+          }
+          
+          private function getOptIW(address:String):InfoWindowOptions{
+              customInfo.setAddress(address);
+              optIW.tailWidth = 20;
+              optIW.tailHeight = 15;
+              optIW.tailAlign = InfoWindowOptions.ALIGN_CENTER;
+              optIW.customContent = customInfo;
+              optIW.cornerRadius = 10;
+              optIW.width = 250;
+              optIW.height = 200;
+              optIW.drawDefaultFrame = true;
+              optIW.fillStyle = fStyle;
+              optIW.strokeStyle = sStyle;
+              return optIW;
+          }
+          
+          private function nNewsLoader(loc:String):void{
+              naver.news(loc,5,1);
+              naver.addEventListener(NaverEvent.NEWS_RESULT, naverNews);
+              naver.addEventListener(NaverEvent.ON_FAULT, nNewsError);
+              
+              function naverNews(e:NaverEvent):void{
+                  naver.removeEventListener(NaverEvent.NEWS_RESULT, naverNews);
+                  customInfo.setDP(e.data);
+              }
+              
+              function nNewsError(e:NaverEvent):void{
+                  naver.removeEventListener(NaverEvent.ON_FAULT, nNewsError);
+                  Alert.show(e.message);
+              }
+          }
+          
+          
+          
+          
+          private function selectType():void{
+              switch(selectMapType.selectedLabel){
+                  case "지도":
+                      map.setMapType(MapType.NORMAL_MAP_TYPE);
+                      break;
+                  case "위성":
+                      map.setMapType(MapType.SATELLITE_MAP_TYPE);
+                      break;
+                  case "중첩":
+                      map.setMapType(MapType.HYBRID_MAP_TYPE);
+                      break;
+                  case "지형":
+                      map.setMapType(MapType.PHYSICAL_MAP_TYPE);
+                      break;
+              }
+              
+              switch(selectViewType.selectedLabel){
+                  case "2D":
+                      map.viewMode = View.VIEWMODE_2D;
+                      break;
+                  case "Orthogonal":
+                      map.viewMode = View.VIEWMODE_ORTHOGONAL;
+                      break;
+                  case "Perspective":
+                      map.viewMode = View.VIEWMODE_PERSPECTIVE;
+                      break;
+              }
+              
+          }
+          
+    ]]>
+</mx:Script>
+<mx:Style>
+    TextInput{
+        borderColor: "0x0B333C";
+    }
+    Label{
+        color:"0xFFFFFF";
+    }
+    ComboBox{
+        fillAlphas : 1.0, 1.0, 1.0, 1.0;
+        fontSize : 12;
+    }
+</mx:Style>
+    <mx:ApplicationControlBar x="0" y="0" dock="true" width="100%">
+        <mx:TextInput borderColor="#0B333C" enter="searchAdrs()" editable="true" focusIn="{tiAddress.text=&apos;&apos;}" text="찾을 주소를 간단히 적어주세요" fontSize="12" fontStyle="normal" id="tiAddress" width="180"/>
+        <mx:ComboBox id="selectMapType" dataProvider="{mOpt..MAPTYPE}" change="selectType()" editable="false" selectedIndex="3"/>
+        <mx:ComboBox id="selectViewType" dataProvider="{mOpt..VIEWTYPE}" change="selectType()" editable="false" selectedIndex="1" />
+        <mx:Label text="위도 :" fontSize="12"/>
+        <mx:Label id="txtLat"/>
+        <mx:Label text="경도 :" fontSize="12" />
+        <mx:Label id="txtLng"/>
+    </mx:ApplicationControlBar>
+    
+    
+    
+    <maps:Map3D xmlns:maps="com.google.maps.*" language="ko" id="map" mapevent_mappreinitialize="pre_Map(event)" mapevent_mapready="onMapReady(event)" width="100%" height="100%"
+        key="ABQIAAAAtnOqRJNeVMn-aqs_CXG-WBR6-pU16f2nkCiVjGTMKU0n_TKfZRRuNkqJMLdNhn9wfiMBlgS88_SPXA" x="0" y="0" click="currentState=&apos;&apos;"/>
+        
+    
+    
+</mx:Application>

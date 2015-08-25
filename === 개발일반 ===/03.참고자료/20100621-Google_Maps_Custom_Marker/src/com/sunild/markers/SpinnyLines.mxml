@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:UIComponent xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:degrafa="http://www.degrafa.com/2007"
+	rollOver="currentState='rollOver';"
+	rollOut="currentState='';">
+	
+	<mx:Script>
+		<![CDATA[
+			// radius of the spinner
+			[Bindable]
+			public var radius:int = 9;
+			
+		]]>
+	</mx:Script>
+		
+	<degrafa:GeometryComposition id="geometryComp" graphicsTarget="{[ this ]}">
+        
+        <degrafa:GeometryRepeater count="4">
+        
+            <degrafa:Line id="line"  x="0" y="{-radius}" x1="0" y1="{radius}">
+            	<degrafa:stroke>
+            		<degrafa:SolidStroke id="lineStroke" color="#000000" weight="5" caps="round"/>
+            	</degrafa:stroke>
+            	<degrafa:transform>
+            		<degrafa:RotateTransform centerX="0" centerY="0"/>
+            	</degrafa:transform>
+            </degrafa:Line>
+
+			<degrafa:modifiers>
+			<degrafa:PropertyModifier targets="{[line]}"
+				modifier="45"
+				property="transform.angle"
+                        />
+			<degrafa:PropertyModifier targets="{[line]}"
+				modifier="[#3274d0,#000000]"
+				property="stroke.color" 
+				modifierOperator="none"/>
+			</degrafa:modifiers>
+		</degrafa:GeometryRepeater>
+        
+        <degrafa:Circle centerX="0" centerY="0" radius="3">
+        	<degrafa:fill>
+        	<degrafa:SolidFill color="#ab2d2d"/>
+        	</degrafa:fill>
+        	<degrafa:stroke>
+        		<degrafa:SolidStroke color="#ab2d2d"/>
+        	</degrafa:stroke>
+        </degrafa:Circle>
+        
+    </degrafa:GeometryComposition>
+	
+	<mx:states>
+		<mx:State name="rollOver">
+			<mx:SetProperty target="{lineStroke}" name="weight" value="7"/>
+		</mx:State>
+	</mx:states>
+	
+	<mx:transitions>
+		<mx:Transition fromState="" toState="rollOver">
+			<mx:AnimateProperty target="{this}"
+				property="rotation"
+				fromValue="0"
+				toValue="360"
+				duration="750" />
+		</mx:Transition>
+	</mx:transitions>
+	
+</mx:UIComponent>
